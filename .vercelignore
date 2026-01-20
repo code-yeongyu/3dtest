@@ -1,0 +1,60 @@
+# Sisyphus planning files
+.sisyphus/
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+e2e/
+test-results/
+playwright-report/
+coverage/
+
+# Config files not needed for deployment
+vitest.config.ts
+vitest.setup.ts
+playwright.config.ts
+
+# Development files
+.prettierrc
+.prettierignore
+eslint.config.mjs
+
+# Documentation
+README.md
+*.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts (handled by Vercel)
+.next/
+out/
+build/
+
+# Dependencies (Vercel installs fresh)
+node_modules/
+bun.lock
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Empty placeholder files
+**/.gitkeep
