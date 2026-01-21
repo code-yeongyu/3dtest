@@ -25,10 +25,10 @@ export default function Home() {
   return (
     <>
       <AnimationSyncer />
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <MainCanvas />
       </div>
-      <main className="relative z-10 h-[500vh]">
+      <main className="relative z-10 h-[500vh] pointer-events-auto">
         <ScrollIndicator />
         <CTAButton />
       </main>
