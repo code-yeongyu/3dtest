@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, Suspense } from 'react';
+import { useEffect, useRef, Suspense, lazy } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { RapierRigidBody } from '@react-three/rapier';
 import { useDeviceCapability } from '@/hooks/useDeviceCapability';
@@ -12,11 +12,12 @@ import PhysicsWorld from './PhysicsWorld';
 import Boulder from '../three/Boulder/Boulder';
 import Sisyphus from '../three/Sisyphus/Sisyphus';
 import { Environment } from '../three/Environment/Environment';
-import { GoldenSparkles } from '../three/Effects/Particles/GoldenSparkles';
-import { DustParticles } from '../three/Effects/Particles/DustParticles';
-import { EnergyBurst } from '../three/Effects/Particles/EnergyBurst';
-import { RevealText } from '../three/Effects/RevealText';
-import PostProcessing from './PostProcessing';
+
+const GoldenSparkles = lazy(() => import('../three/Effects/Particles/GoldenSparkles').then(m => ({ default: m.GoldenSparkles })));
+const DustParticles = lazy(() => import('../three/Effects/Particles/DustParticles').then(m => ({ default: m.DustParticles })));
+const EnergyBurst = lazy(() => import('../three/Effects/Particles/EnergyBurst').then(m => ({ default: m.EnergyBurst })));
+const RevealText = lazy(() => import('../three/Effects/RevealText').then(m => ({ default: m.RevealText })));
+const PostProcessing = lazy(() => import('./PostProcessing'));
 
 export default function MainCanvas() {
   const { tier, isMobile } = useDeviceCapability();
