@@ -41,14 +41,14 @@ const PALETTES = {
 export default function Lighting() {
   const { quality } = useSceneStore();
   const { phase, phaseProgress } = useScrollProgress();
-  
+
   const keyLightRef = useRef<DirectionalLight>(null);
   const fillLightRef = useRef<HemisphereLight>(null);
   const rimLightRef = useRef<DirectionalLight>(null);
 
   const shadowConfig = useMemo(() => {
     if (quality === 'low') return { castShadow: false };
-    
+
     return {
       castShadow: true,
       'shadow-mapSize': quality === 'high' ? [2048, 2048] : [1024, 1024],
@@ -71,7 +71,11 @@ export default function Lighting() {
 
     keyLightRef.current.color.lerpColors(currentPalette.key, nextPalette.key, phaseProgress);
     fillLightRef.current.color.lerpColors(currentPalette.sky, nextPalette.sky, phaseProgress);
-    fillLightRef.current.groundColor.lerpColors(currentPalette.ground, nextPalette.ground, phaseProgress);
+    fillLightRef.current.groundColor.lerpColors(
+      currentPalette.ground,
+      nextPalette.ground,
+      phaseProgress
+    );
     rimLightRef.current.color.lerpColors(currentPalette.rim, nextPalette.rim, phaseProgress);
   });
 
@@ -84,10 +88,7 @@ export default function Lighting() {
         {...shadowConfig}
       />
 
-      <hemisphereLight
-        ref={fillLightRef}
-        intensity={0.6}
-      />
+      <hemisphereLight ref={fillLightRef} intensity={0.6} />
 
       <directionalLight
         ref={rimLightRef}

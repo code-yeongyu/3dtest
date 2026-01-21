@@ -18,6 +18,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      include: [
+        'src/lib/animationConfig.ts',
+        'src/lib/animationStateMachine.ts',
+        'src/lib/audioManager.ts',
+        'src/lib/qualityTiers.ts',
+        'src/stores/animationStore.ts',
+      ],
       exclude: [
         'node_modules/',
         'src/__tests__/',

@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useScrollProgress, easings, type AnimationPhase } from '@/hooks/useScrollProgress';
+import { usePrefersReducedMotion } from '@/hooks/useReducedMotion';
 
 interface Waypoint {
   position: THREE.Vector3Tuple;
@@ -60,6 +61,7 @@ function interpolateWaypoints(
 export default function CameraRig() {
   const { camera } = useThree();
   const { phase, phaseProgress } = useScrollProgress();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const targetPosition = useRef(new THREE.Vector3(...WAYPOINTS[0].position));
   const targetLookAt = useRef(new THREE.Vector3(...WAYPOINTS[0].lookAt));
@@ -71,16 +73,21 @@ export default function CameraRig() {
     targetPosition.current.set(...position);
     targetLookAt.current.set(...lookAt);
 
-    lerpVector3(
-      camera.position,
-      targetPosition.current.toArray() as THREE.Vector3Tuple,
-      LERP_FACTOR
-    );
-    lerpVector3(
-      currentLookAt.current,
-      targetLookAt.current.toArray() as THREE.Vector3Tuple,
-      LERP_FACTOR
-    );
+    if (prefersReducedMotion) {
+      camera.position.set(...position);
+      currentLookAt.current.set(...lookAt);
+    } else {
+      lerpVector3(
+        camera.position,
+        targetPosition.current.toArray() as THREE.Vector3Tuple,
+        LERP_FACTOR
+      );
+      lerpVector3(
+        currentLookAt.current,
+        targetLookAt.current.toArray() as THREE.Vector3Tuple,
+        LERP_FACTOR
+      );
+    }
 
     camera.lookAt(currentLookAt.current);
   });

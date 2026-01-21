@@ -1,49 +1,30 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export type AnimationPhase = 0 | 1 | 2 | 3 | 4;
+
+export type ScrollDirection = 'up' | 'down' | 'idle';
 
 export interface ScrollProgress {
   progress: number;
   phase: AnimationPhase;
   phaseProgress: number;
+  direction: ScrollDirection;
+  velocity: number;
 }
 
 const PHASE_BOUNDARIES = [0, 0.2, 0.4, 0.6, 0.8, 1.0] as const;
 
 export const PHASE_NAMES = ['Push', 'Summit', 'Fall', 'Despair', 'Reveal'] as const;
 
-let scrollProgress: ScrollProgress = {
+const initialProgress: ScrollProgress = {
   progress: 0,
   phase: 0,
   phaseProgress: 0,
+  direction: 'idle',
+  velocity: 0,
 };
-
-const listeners = new Set<() => void>();
-
-function emitChange() {
-  for (const listener of listeners) {
-    listener();
-  }
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-function getSnapshot(): ScrollProgress {
-  return scrollProgress;
-}
-
-// Cached server snapshot to avoid React infinite loop
-// (useSyncExternalStore requires getServerSnapshot to return stable reference)
-const serverSnapshot: ScrollProgress = { progress: 0, phase: 0, phaseProgress: 0 };
-
-function getServerSnapshot(): ScrollProgress {
-  return serverSnapshot;
-}
 
 function calculatePhase(progress: number): { phase: AnimationPhase; phaseProgress: number } {
   const clampedProgress = Math.max(0, Math.min(1, progress));
@@ -61,29 +42,37 @@ function calculatePhase(progress: number): { phase: AnimationPhase; phaseProgres
   return { phase: 4, phaseProgress: 1 };
 }
 
-function updateScrollProgress(progress: number) {
-  const { phase, phaseProgress } = calculatePhase(progress);
-
-  if (
-    scrollProgress.progress !== progress ||
-    scrollProgress.phase !== phase ||
-    scrollProgress.phaseProgress !== phaseProgress
-  ) {
-    scrollProgress = { progress, phase, phaseProgress };
-    emitChange();
-  }
-}
-
 export function useScrollProgress(): ScrollProgress {
-  useEffect(() => {
+  const [scrollData, setScrollData] = useState<ScrollProgress>(initialProgress);
+
+  const handleScroll = useCallback(() => {
     if (typeof window === 'undefined') return;
 
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = docHeight > 0 ? Math.min(1, Math.max(0, scrollTop / docHeight)) : 0;
-      updateScrollProgress(progress);
-    };
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? Math.min(1, Math.max(0, scrollTop / docHeight)) : 0;
+    const { phase, phaseProgress } = calculatePhase(progress);
+
+    setScrollData((prev) => {
+      const deltaProgress = progress - prev.progress;
+      const direction: ScrollDirection =
+        deltaProgress > 0.0001 ? 'down' : deltaProgress < -0.0001 ? 'up' : 'idle';
+      const velocity = Math.abs(deltaProgress) * 1000;
+
+      if (
+        prev.progress === progress &&
+        prev.phase === phase &&
+        prev.direction === direction
+      ) {
+        return prev;
+      }
+
+      return { progress, phase, phaseProgress, direction, velocity };
+    });
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
@@ -91,9 +80,9 @@ export function useScrollProgress(): ScrollProgress {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [handleScroll]);
 
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  return scrollData;
 }
 
 export function interpolatePhase<T extends number | number[]>(
